@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -47,7 +48,7 @@ class _HomePageState extends State<HomePage> {
         elevation: 0.0,
         title: Center(
             child: Text(
-          'Check Favourite Words',
+          'Search Favourite Words',
           style: TextStyle(color: Colors.white),
         )),
         bottom: PreferredSize(
@@ -56,7 +57,7 @@ class _HomePageState extends State<HomePage> {
             children: <Widget>[
               Expanded(
                 child: Container(
-                  margin: const EdgeInsets.only(left: 12, bottom: 8),
+                  margin: const EdgeInsets.only(left: 12, bottom: 8,right: 12),
                   decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18)),
@@ -71,17 +72,17 @@ class _HomePageState extends State<HomePage> {
                     decoration: InputDecoration(
                         hintText: 'Search for a word',
                         hintStyle: TextStyle(color: Colors.grey),
-                        contentPadding: const EdgeInsets.only(left: 24),
+                        contentPadding: const EdgeInsets.only(left: 24,right: 24),
                         border: InputBorder.none),
                   ),
                 ),
               ),
-              IconButton(
-                  icon: Icon(
-                    Icons.search,
-                    color: Colors.white,
-                  ),
-                  onPressed: () => _search())
+              // IconButton(
+              //     icon: Icon(
+              //       Icons.search,
+              //       color: Colors.white,
+              //     ),
+              //     onPressed: () => _search())
             ],
           ),
         ),
@@ -98,7 +99,10 @@ class _HomePageState extends State<HomePage> {
             }
             if (snapshot.data == 'waiting') {
               return Center(
-                child: CircularProgressIndicator(),
+                child: SpinKitFoldingCube(
+          color: Colors.black,
+          size: 100,
+        ),
               );
             }
             return ListView.builder(
@@ -112,7 +116,9 @@ class _HomePageState extends State<HomePage> {
                    leading:snapshot.data['definitions'][index]['image_url']==null? null: CircleAvatar(
                      backgroundImage: NetworkImage(snapshot.data['definitions'][index]['image_url']),
                    ),
-                   title: Text(_controller.text.trim() + '(' + snapshot.data['definitions'][index]['type']+ ')'),
+                   title: Text(_controller.text.trim() + '(' + snapshot.data['definitions'][index]['type']+ ')')
+
+                   
                         ),
                       ),
                       Padding(
