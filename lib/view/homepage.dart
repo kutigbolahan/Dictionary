@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -18,12 +19,15 @@ class _HomePageState extends State<HomePage> {
   TextEditingController _controller;
   StreamController _streamController;
   Stream _stream;
+  Timer _debounce;
 
   _search() async {
     if (_controller.text == null || _controller.text.length == 0) {
       _streamController.add(null);
+      return;
     }
-   http.Response response= await http.get(_url, headers: {'Authorization': 'Token ' + _token});
+    _streamController.add('waiting');
+   Response response= await http.get(_url + _controller.text.trim(), headers: {'Authorization': 'Token ' + _token});
       _streamController.add(jsonDecode(response.body));
   }
 
@@ -58,7 +62,12 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(18)),
                   child: TextFormField(
                     controller: _controller,
-                    onChanged: (String text) {},
+                    onChanged: (String text) {
+                      if (_debounce?.isActive ?? false) _debounce.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 1000), (){
+                        _search();
+                      });
+                    },
                     decoration: InputDecoration(
                         hintText: 'Search for a word',
                         hintStyle: TextStyle(color: Colors.grey),
@@ -72,14 +81,50 @@ class _HomePageState extends State<HomePage> {
                     Icons.search,
                     color: Colors.white,
                   ),
-                  onPressed: () => null)
+                  onPressed: () => _search())
             ],
           ),
         ),
       ),
-      body: StreamBuilder(
-        stream: null,
-        builder: (context, snapshot) {},
+      body: Container(
+        margin: const EdgeInsets.all(8.0),
+        child: StreamBuilder(
+          stream: _stream,
+          builder: (context, snapshot) {
+            if (snapshot.data == null) {
+              return Center(
+                child: Text('Enter a search word'),
+              );
+            }
+            if (snapshot.data == 'waiting') {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return ListView.builder(
+              itemCount: snapshot.data['definitions'].length,
+              itemBuilder: (context , int index){
+                  return ListBody(
+                    children: <Widget>[
+                      Container(
+                        color: Colors.grey[300],
+                        child: ListTile(
+                   leading:snapshot.data['definitions'][index]['image_url']==null? null: CircleAvatar(
+                     backgroundImage: NetworkImage(snapshot.data['definitions'][index]['image_url']),
+                   ),
+                   title: Text(_controller.text.trim() + '(' + snapshot.data['definitions'][index]['type']+ ')'),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(snapshot.data['definitions'][index]['definition']),
+                      )
+                    ],
+                  );
+              }
+            );
+          },
+        ),
       ),
     );
   }
